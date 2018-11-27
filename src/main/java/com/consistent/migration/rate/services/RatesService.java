@@ -89,8 +89,8 @@ public class RatesService {
 
 	
 		
-	Contents contentsEng=getMappingEnglish("FBC","FI");
-	Contents contentsSpa=getMappingSpanish("FBC","FI");
+	Contents contentsEng=getMappingEnglish("FAA","FA");
+	Contents contentsSpa=getMappingSpanish("FAA","FA");
 	GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,contentsEng.getContents().get(0).getBrands().get(0).getCode());
 	
 	
@@ -263,7 +263,7 @@ public class RatesService {
 					mappingRate(resourceRequest, rate12.getKey(), rate12.getValue(), brand);
 					System.out.println("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
 					count++;
-					if(count==20){
+					if(count==100){
 						System.out.println("thanks for use migration portlet");
 						break;
 					}
@@ -1117,7 +1117,7 @@ public class RatesService {
 
 							_dynamics.DynamicElement("currencyRate", "list", "keyword", 
 
-									_dynamics.getDynamicContent(rate_es.getCurrency(),rate_en.getCurrency())
+									_dynamics.getDynamicContent("mxn","usd")
 
 									)+
 

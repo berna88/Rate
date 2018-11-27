@@ -138,8 +138,7 @@ public class MappingString {
     	boolean existe = false;
     	List<WebContent> con = service.getWebContents();
     	for(WebContent webContent: con){
-    	 	if(webContent.getBrand().toUpperCase().equals(myBrand.toUpperCase())){
-    	 		
+    	 	if(webContent.getBrand().toUpperCase().equals(myBrand.toUpperCase()) || webContent.getBrand().toUpperCase().contains(myBrand)){
     	 		contents.add(webContent);
     	}
     	}

@@ -23,8 +23,25 @@
 <p>
 	<b><liferay-ui:message key="com.consistent.migration.rates.caption"/></b>
 </p>
-
+<section>
+	<article>
+	<form>
+    <label class="checkbox-inline">
+      <input type="checkbox" value="AQUA">AQUA
+    </label>
+    <label class="checkbox-inline">
+      <input type="checkbox" value="FA">FA
+    </label>
+    <label class="checkbox-inline">
+      <input type="checkbox" value="FI">FI
+    </label>
+  </form>
+  </article>
+</section>
+<aside>
 	<button id="idAppAlfrescoButtonGetInfo">Import Content</button>
+</aside>
+	
 <script src="<%=request.getContextPath()%>/webjars/jquery/3.1.0/jquery.js"></script>	
 <script>
 

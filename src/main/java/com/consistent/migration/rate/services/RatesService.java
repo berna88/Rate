@@ -16,6 +16,7 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.ui.Model;
 
 import com.consistent.migration.rate.models.Brand;
 import com.consistent.migration.rate.models.Content;
@@ -86,19 +87,31 @@ public class RatesService {
 	
 	
 	public void insertWC(ResourceRequest resourceRequest) throws Exception{
+		Map<String, String> m = new HashMap<>();
+		//m.put("AQB","AQUA");
+		m.put("FAA", "FA");
+		//m.put("FIQ", "FI");
 
-	
+		for(Map.Entry<String, String> entry :m.entrySet()){
+			Contents contentsEng=getMappingEnglish(entry.getKey(),entry.getValue());
+			Contents contentsSpa=getMappingSpanish(entry.getKey(),entry.getValue());
+			GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,contentsEng.getContents().get(0).getBrands().get(0).getCode());
+			System.out.println("contentsEng.getContents().size() : "+ contentsEng.getContents().size());
+			System.out.println("contentsEng.getContents().get(0).getBrands().size() : " + contentsEng.getContents().get(0).getBrands().get(0).getCode());
+		}
+		System.out.println("Proceso finalizado");
 		
-	Contents contentsEng=getMappingEnglish("FIQ","FI");
-	Contents contentsSpa=getMappingSpanish("FIQ","FI");
-	GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,contentsEng.getContents().get(0).getBrands().get(0).getCode());
+			
+		
+			
+		
+	
 	
 	
 	
 
 	
-	System.out.println("contentsEng.getContents().size() : "+ contentsEng.getContents().size());
-	System.out.println("contentsEng.getContents().get(0).getBrands().size() : " + contentsEng.getContents().get(0).getBrands().get(0).getCode());
+	
 
 	
 	}
@@ -263,10 +276,10 @@ public class RatesService {
 					mappingRate(resourceRequest, rate12.getKey(), rate12.getValue(), brand);
 					System.out.println("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
 					count++;
-					if(count==5){
+					/*if(count==5){
 						System.out.println("thanks for use migration portlet");
 						break;
-					}
+					}*/
 				}
 				// Lista que solo tiene un idioma
 				// Solo obtiene los campos vacios
@@ -299,6 +312,7 @@ public class RatesService {
 			addJournalArticle(userId, groupId, contentsEng.getContents().get(0).getBrands().get(0).getCode(), getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode()), themeDisplay);
 			System.out.println(count);
 			readServiceRates(resourceRequest);
+			
 }
 	
 	
@@ -362,17 +376,28 @@ public class RatesService {
 			JournalFolder folder = createFolder(themeDisplay);
 			if (ddmTemplate1 != null && folder!=null) {
 				System.out.println("insert web content");
+				String aux_title="";
+				if(title!=null && !title.isEmpty() && keyword!=null && !keyword.isEmpty()){
+					aux_title=title+"-"+keyword;
+				}
+				else if(title!=null && !title.isEmpty() && (keyword==null || keyword.isEmpty())){
+					aux_title=title;
+				}else if((title==null || title.isEmpty()) && keyword!=null && !keyword.isEmpty()){
+					aux_title=keyword;
+				}
+			System.out.println("<!------- "+aux_title+" --------->");
+				
 			  JournalArticle ja=  insertWebContent(resourceRequest, 
 			    				 xml,
-			    				 title+"-"+keyword,
+			    				 aux_title,
 			    				 folder.getFolderId(),
 			    				 description, 
 			    				 ddmStructure1, 
 			    				 ddmTemplate1);		
 			  if(ja!=null){
 			  insertWc(themeDisplay.getUserId(),
-					       title,
-					       title+"-"+keyword,
+					       aux_title,
+					       aux_title,
 						   ""+ja.getResourcePrimKey(), 
 						   brand,
 						   ""+themeDisplay.getSiteGroupId(),
@@ -568,10 +593,15 @@ public class RatesService {
 		
 		
 		String rate = _dynamics.DynamicHeader(
-
+ 
 				_dynamics.DynamicElement("Rate", "selection_break", "keyword",
 
 							_dynamics.DynamicElement("typeRate", "radio", "keyword", 
+
+									_dynamics.getDynamicContentString("", "")
+
+									)+
+							_dynamics.DynamicElement("travelclickHotelCode", "text", "keyword", 
 
 									_dynamics.getDynamicContentString("", "")
 

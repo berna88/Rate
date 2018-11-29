@@ -13,6 +13,7 @@
 <%@ page import="com.liferay.portal.kernel.model.PersistedModel" %>
 <%@ page import="com.liferay.portal.kernel.dao.search.SearchEntry" %>
 <%@ page import="com.liferay.portal.kernel.dao.search.ResultRow" %>
+<%@taglib uri="http://www.springframework.org/tags/form" prefix="form"%>
 
 
 
@@ -25,21 +26,24 @@
 </p>
 <section>
 	<article>
-	<form>
+	<portlet:defineObjects />
+	<portlet:actionURL var="submitFormURL" name="handleCustomer"/>
+	<form:form name="marcas" method="post" modelAttribute="marcas" action="${ submitFormURL.toString() }">
     <label class="checkbox-inline">
-      <input type="checkbox" value="AQUA">AQUA
+      <input type="checkbox" name="marca" value="AQUA">AQUA
     </label>
     <label class="checkbox-inline">
-      <input type="checkbox" value="FA">FA
+      <input type="checkbox" name="marca" value="FA">FA
     </label>
     <label class="checkbox-inline">
-      <input type="checkbox" value="FI">FI
+      <input type="checkbox" name="marca" value="FI">FI
     </label>
-  </form>
+  </form:form>
   </article>
 </section>
 <aside>
 	<button id="idAppAlfrescoButtonGetInfo">Import Content</button>
+
 </aside>
 	
 <script src="<%=request.getContextPath()%>/webjars/jquery/3.1.0/jquery.js"></script>	

@@ -89,8 +89,8 @@ public class RatesService {
 
 	
 		
-	Contents contentsEng=getMappingEnglish("FAA","FA");
-	Contents contentsSpa=getMappingSpanish("FAA","FA");
+	Contents contentsEng=getMappingEnglish("FIQ","FI");
+	Contents contentsSpa=getMappingSpanish("FIQ","FI");
 	GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,contentsEng.getContents().get(0).getBrands().get(0).getCode());
 	
 	
@@ -263,7 +263,7 @@ public class RatesService {
 					mappingRate(resourceRequest, rate12.getKey(), rate12.getValue(), brand);
 					System.out.println("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
 					count++;
-					if(count==100){
+					if(count==5){
 						System.out.println("thanks for use migration portlet");
 						break;
 					}
@@ -298,6 +298,7 @@ public class RatesService {
 			//Agregando Web content de rate
 			addJournalArticle(userId, groupId, contentsEng.getContents().get(0).getBrands().get(0).getCode(), getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode()), themeDisplay);
 			System.out.println(count);
+			readServiceRates(resourceRequest);
 }
 	
 	
@@ -475,7 +476,8 @@ public class RatesService {
 		}
 		}
 		System.out.println("Mi marca"+ brand);
-	
+		System.out.println("Mi fecha booking ingles: ".concat(rate_en.getEnd()));
+		System.out.println("Mi fecha booking español: ".concat(rate_es.getEnd()));
 				
 		System.out.println("mapenado rates");
 		String media = null;
@@ -1487,6 +1489,68 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 		JournalArticle article = JournalArticleLocalServiceUtil.addArticle(
 				userId, groupId, 0, titleMap, null, xmlContent, ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), serviceContext);
 				return article;
+	}
+
+	public void readServiceRates(ResourceRequest resourceRequest) throws PortalException{
+		System.out.println("Antes del bucle");
+		// Accediendo al servicio
+		WebContentLocalService service = WebContentLocalServiceUtil.getService();
+		// Lista de contenidos
+		List<WebContent> contents = service.getWebContents();
+		// Lista de articulos
+		List<JournalArticle> articles = JournalArticleLocalServiceUtil.getArticles();
+		ThemeDisplay themeDisplay = (ThemeDisplay)resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
+		String[] br=null;
+		long categories[] = null;
+		for(WebContent content: contents){	
+			for(JournalArticle article: articles){		
+				if(content.getClasspk().equals(Long.toString(article.getResourcePrimKey())) && content.getStatus().equals(Long.toString(article.getGroupId()))){
+					br = convertBrandToArray(content.getBrand());
+					categories= new long[br.length];
+					for (int i = 0; i < br.length; i++) {
+						 categories[i]= searchCategory(br[i],themeDisplay.getScopeGroupId());
+						 
+					}
+					if(categories!=null){
+						System.out.println("update webcontent");
+						updateJornal(categories,article,themeDisplay);
+					}
+					
+					
+				}
+				
+			}
+		
+		}
+		
+		
+	}
+	
+	private void updateJornal(long[] categories, JournalArticle article, ThemeDisplay themeDisplay) throws PortalException {
+		
+		for (int i = 0; i < categories.length; i++) {
+			System.out.println(categories[i]);
+		}
+		
+		
+		
+		System.out.println("___________________");
+
+		System.out.println(article.getContent());
+		JournalArticleLocalServiceUtil.updateAsset(themeDisplay.getScopeGroupId(), article, categories, null, null, 0.0);
+		
+	}
+
+
+	public String[] convertBrandToArray(String brand){
+		brand = brand.replace(" ", "");
+		String s[] = null;
+		if(!brand.split(",").toString().equals(" ")){
+			 s = brand.split(",");
+		}
+		
+		
+		return s;
 	}
 
 

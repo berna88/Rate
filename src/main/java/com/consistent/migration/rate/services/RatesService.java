@@ -16,12 +16,8 @@ import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.ui.Model;
 
-import com.consistent.migration.rate.models.Brand;
-import com.consistent.migration.rate.models.Content;
 import com.consistent.migration.rate.models.Contents;
-import com.consistent.migration.rate.models.MappingString;
 import com.consistent.migration.rate.models.Rate;
 import com.liferay.dynamic.data.mapping.model.DDMStructure;
 import com.liferay.dynamic.data.mapping.model.DDMTemplate;
@@ -37,6 +33,7 @@ import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
 import com.liferay.portal.kernel.workflow.WorkflowConstants;
 
+import posadas_wc_sb.exception.NoSuchWebContentException;
 import posadas_wc_sb.model.WebContent;
 import posadas_wc_sb.service.WebContentLocalService;
 import posadas_wc_sb.service.WebContentLocalServiceUtil;
@@ -89,31 +86,22 @@ public class RatesService {
 	public void insertWC(ResourceRequest resourceRequest) throws Exception{
 		Map<String, String> m = new HashMap<>();
 		//m.put("AQB","AQUA");
-		m.put("FAA", "FA");
-		//m.put("FIQ", "FI");
+		//m.put("FVZ", "FA");
+		//m.put("SLP", "FI");
+		//m.put("FBC", "FAG");
+		//m.put("EXN", "EX");
+		m.put("OAC", "ONE");
+		m.put("GCA", "GAMMA");
+		m.put("RLC", "LARC");
 
 		for(Map.Entry<String, String> entry :m.entrySet()){
+			System.out.println("<------- Marca :"+ entry.getValue()+" ---------->");
 			Contents contentsEng=getMappingEnglish(entry.getKey(),entry.getValue());
 			Contents contentsSpa=getMappingSpanish(entry.getKey(),entry.getValue());
-			GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,contentsEng.getContents().get(0).getBrands().get(0).getCode());
-			System.out.println("contentsEng.getContents().size() : "+ contentsEng.getContents().size());
-			System.out.println("contentsEng.getContents().get(0).getBrands().size() : " + contentsEng.getContents().get(0).getBrands().get(0).getCode());
+			GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,entry.getValue());
 		}
 		System.out.println("Proceso finalizado");
-		
 			
-		
-			
-		
-	
-	
-	
-	
-
-	
-	
-
-	
 	}
 	
 	
@@ -177,6 +165,14 @@ public class RatesService {
 		return wcs.getWebContentByNameByCode(name, code);
 	}
 	
+	public void delete() throws NoSuchWebContentException, PortalException{
+		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
+		for(WebContent content : wcs.getWebContents()){
+			wcs.deleteWebContent(content.getPrimaryKey());		
+			}
+		
+	}
+	
 	public posadas_wc_sb.model.WebContent insertWc(long userid,
 						 String code,
 						 String classpk,
@@ -198,53 +194,50 @@ public class RatesService {
 	
 	public void GeneratetWebContent(ResourceRequest resourceRequest,Contents contentsEng,Contents  contentsSpa,String brand) throws Exception{
 		// TODO Auto-generated method stub
-		System.out.println("peticion 1");
+		System.out.println("---------Entrando a Generar el webcontent--------------");
 		List<Rate> rateEngList = new ArrayList<>();
 		List<Rate> rateSpaList = new ArrayList<>();
-
-			
-			System.out.println("contentsEng.getContents().size() : "+ contentsEng.getContents().size());
-			System.out.println("contentsEng.getContents().get(0).getBrands().size() : " + contentsEng.getContents().get(0).getBrands().get(0).getCode());
-	
-			
-			System.out.println("contentsEng.getContents().get(0).getBrands().get(0).getRates().size() : " + contentsEng.getContents().get(0).getBrands().get(0).getRates().size());
-			System.out.println("contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate().size()" + contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate().size());
-			
-			for(Rate rate : contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()){
-				if(rate.getGuid() != null && !rate.getGuid().equals(""))
-					rateEngList.add(rate);
+			if(contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()!=null){
+				for(Rate rate : contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()){
+					if(rate.getGuid() != null && !rate.getGuid().equals(""))
+						rateEngList.add(rate);
+				}
 			}
 			
-			
-			System.out.println("-----------------------");
-			
-			System.out.println("contentsSpa.getContents().size() : "+ contentsSpa.getContents().size());
-			System.out.println("contentsSpa.getContents().get(0).getBrands().size() : " + contentsSpa.getContents().get(0).getBrands().size());
-			System.out.println("contentsSpa.getContents().get(0).getBrands().get(0).getRates().size() : " + contentsSpa.getContents().get(0).getBrands().get(0).getRates().size());
-			System.out.println("contentsSpa.getContents().get(0).getBrands().get(0).getRates().get(0).getRate().size()" + contentsSpa.getContents().get(0).getBrands().get(0).getRates().get(0).getRate().size());
-				
 			int max = 0;
-			for(Rate rate : contentsSpa.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()){
-				if(rate.getGuid() != null && !rate.getGuid().equals(""))
-					rateSpaList.add(rate);
+			if(contentsSpa.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()!=null){
+				for(Rate rate : contentsSpa.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()){
+					if(rate.getGuid() != null && !rate.getGuid().equals(""))
+						rateSpaList.add(rate);
+				}
 			}
-			System.out.println("English: " + rateEngList.size());
-			System.out.println("Spanish : " + rateSpaList.size());
+			
+			//System.out.println("English: " + rateEngList.size());
+			//System.out.println("Spanish : " + rateSpaList.size());
 			Map<Rate,Rate> mapper = new HashMap<>();
 			
 			List<Rate> maxList = null;
 			List<Rate> minList = null;
-				
+				int language = 0;
 			if(rateEngList.size() > rateSpaList.size())
-			{maxList=rateEngList;
+				
+			{
+			System.out.println("ENG > ESP");
+			maxList=rateEngList;
 			minList=rateSpaList;
+			
 			}
 			else if(rateSpaList.size() > rateEngList.size())
-		{maxList=rateSpaList;
+		{
+				System.out.println("ESP > ENG");
+		maxList=rateSpaList;
 		minList=rateEngList;
+		language = 1;
 		}
 		else
-		{maxList = rateEngList;
+		{
+			System.out.println("DEFAULT");
+		maxList = rateEngList;
 		minList=rateSpaList;
 		}
 			
@@ -255,6 +248,7 @@ public class RatesService {
 					
 					if(rMax.getCode().equals(rMin.getCode()))
 					{
+						
 						flag = true;
 						mapper.put(rMax, rMin);
 						minList.remove(rMin);
@@ -270,46 +264,64 @@ public class RatesService {
 			int count = 0;
 			System.out.println("TamaÃ±o: "+mapper.size() + " Valores iguales: " + max);
 			// Lista donde se agregaran los rates restantes
+			int count2 = 0;
 			List<Rate> rateOnlyLanguage = new ArrayList<>();
 			for(Map.Entry<Rate, Rate> rate12: mapper.entrySet()){
-				if(!rate12.getValue().getCode().isEmpty()){
+				
+				if(!rate12.getValue().getCode().isEmpty() && !rate12.getKey().getCode().isEmpty()){
+					//mappingRate(resourceRequest, rate_es, rate_en, brand);
+					if(rate12.getKey().getLanguage().toLowerCase().equals("english"))
+					mappingRate(resourceRequest, rate12.getValue() , rate12.getKey() , brand);
+					else
 					mappingRate(resourceRequest, rate12.getKey(), rate12.getValue(), brand);
 					System.out.println("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
+					
 					count++;
-					/*if(count==5){
-						System.out.println("thanks for use migration portlet");
-						break;
-					}*/
 				}
 				// Lista que solo tiene un idioma
 				// Solo obtiene los campos vacios
-				if(rate12.getValue().getCode().equals("")){
+				if(rate12.getValue().getCode().equals("") && !rate12.getKey().getCode().equals("")){
+					count2++;
 					for(int i=0; i < mapper.size(); i++){
 						if(rate12.getKey().getCode().equals(maxList.get(i).getCode())){
 							rateOnlyLanguage.add(maxList.get(i));
 							break;
 						}
 					}
+				}else {
+					if(rate12.getKey().getCode().equals("") && !rate12.getValue().getCode().equals("")){
+						count2++;
+						for(int i=0; i < mapper.size(); i++){
+							if(rate12.getValue().getCode().equals(maxList.get(i).getCode())){
+								rateOnlyLanguage.add(maxList.get(i));
+								break;
+							}
+						}
+					}
 				}
 				//mappingRate(resourceRequest, rate12.getKey(), rate12.getValue());
 				//getRate(rate12.getKey(), rate12.getValue());
+				
+				if(count == 1)
+					break;
 			}
+			System.out.println("total: "+count2);
 			
-	
 			// Recorrido de los web content con un solo idioma
 			for(Rate rateOnly: rateOnlyLanguage){
-				System.out.println("Creando rate un solo idioma");
+				
+				System.out.println("Creando rate un solo idioma: "+ rateOnly.getLanguage());
 				mappingRate(resourceRequest, rateOnly, rateOnly, brand);
 		
 						}
 			// obtencion de xml de marca
-			String xmlBrand = getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode());
-			System.out.println("Xml de brand "+ xmlBrand);
+			//String xmlBrand = getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode());
+			//System.out.println("Xml de brand "+ xmlBrand);
 			ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 			long userId = themeDisplay.getUserId();
 			long groupId = themeDisplay.getScopeGroupId();
 			//Agregando Web content de rate
-			addJournalArticle(userId, groupId, contentsEng.getContents().get(0).getBrands().get(0).getCode(), getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode()), themeDisplay);
+		//	addJournalArticle(userId, groupId, contentsEng.getContents().get(0).getBrands().get(0).getCode(), getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode()), themeDisplay);
 			System.out.println(count);
 			readServiceRates(resourceRequest);
 			
@@ -374,30 +386,19 @@ public class RatesService {
 				}
 			}
 			JournalFolder folder = createFolder(themeDisplay);
-			if (ddmTemplate1 != null && folder!=null) {
-				System.out.println("insert web content");
-				String aux_title="";
-				if(title!=null && !title.isEmpty() && keyword!=null && !keyword.isEmpty()){
-					aux_title=title+"-"+keyword;
-				}
-				else if(title!=null && !title.isEmpty() && (keyword==null || keyword.isEmpty())){
-					aux_title=title;
-				}else if((title==null || title.isEmpty()) && keyword!=null && !keyword.isEmpty()){
-					aux_title=keyword;
-				}
-			System.out.println("<!------- "+aux_title+" --------->");
-				
+			if (ddmTemplate1 != null && folder!=null && title!=null) {
+				System.out.println("insert web content"+ title);
 			  JournalArticle ja=  insertWebContent(resourceRequest, 
 			    				 xml,
-			    				 aux_title,
+			    				 title+"-"+keyword,
 			    				 folder.getFolderId(),
 			    				 description, 
 			    				 ddmStructure1, 
 			    				 ddmTemplate1);		
 			  if(ja!=null){
 			  insertWc(themeDisplay.getUserId(),
-					       aux_title,
-					       aux_title,
+					       title,
+					       title+"-"+keyword,
 						   ""+ja.getResourcePrimKey(), 
 						   brand,
 						   ""+themeDisplay.getSiteGroupId(),
@@ -465,7 +466,7 @@ public class RatesService {
 											    DDMStructure ddmStructure1, 
 											    DDMTemplate ddmTemplate1)
 											    throws PortalException {
-			System.out.println("Insert WEB content");
+			System.out.println("_________Ejecutando insertWebContent __________");
 			ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 			Map<Locale, String> titleMap = new HashMap<Locale, String>();
 			titleMap.put(themeDisplay.getLocale(), title);
@@ -483,7 +484,7 @@ public class RatesService {
 		
 	
 	public String mappingRate(ResourceRequest resourceRequest,Rate rate_es,Rate rate_en, String brand) throws PortalException, IOException{
-		
+		System.out.println("_________Ejecutando mapeo de rates __________");
 		String url=null;
 		if(rate_en.getMedialinks()!=null){
 		if(rate_en.getMedialinks().size()>0){
@@ -500,10 +501,8 @@ public class RatesService {
 			}
 		}
 		}
-		System.out.println("Mi marca"+ brand);
-		System.out.println("Mi fecha booking ingles: ".concat(rate_en.getEnd()));
-		System.out.println("Mi fecha booking español: ".concat(rate_es.getEnd()));
-				
+		System.out.println("_________Importando marca __________");
+		System.out.println(brand);		
 		System.out.println("mapenado rates");
 		String media = null;
 		
@@ -1199,35 +1198,34 @@ public class RatesService {
 	ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
  
-   String title=null;
-   String code=null;
-   String key=null;
+   String title="";
+   String code="";
+   String key="";
    
    if(rate_en.getCode()!=null && rate_en.getKeyword()!=null){
 	   title=rate_en.getCode()+"-"+rate_en.getKeyword();
 	   code=rate_en.getCode();
 	   key=rate_en.getKeyword();
-	   System.out.println("title en:"+title);
+	   
    }else if(rate_es.getCode()!=null  && rate_es.getKeyword()!=null){
 	   title=rate_es.getCode()+"-"+rate_es.getKeyword();
 	   code=rate_es.getCode();
 	   key=rate_es.getKeyword();
-	   System.out.println(title);
-	   System.out.println("title es:"+title);
+	   
 	   
    }
    
    List<posadas_wc_sb.model.WebContent> pass=validateWcByName(title,code);
-   System.out.println("titulo final:"+title+"tamaño cadena"+pass.size());
-   System.out.println("RATETC-RATETC"+"RATETC");
-   if(pass.size() <= 0){
+   if(pass.size() == 0){
 	   saveWebcontent(resourceRequest,rate ,code,key, rate_en.getDescription(),brand);
+	   System.out.println("Guardando ");
+	   getWC();
    }
    else{
-	   System.out.println("else if");
+	   
 	   getWC();
 
-	   if(title!=null && title!=" "){
+	   if(title!=null || title!=" "){
 		   
 		   JournalArticleLocalServiceUtil.getArticles();
 		   @SuppressWarnings("unused")
@@ -1244,14 +1242,10 @@ public class RatesService {
 						 }
 						 else{
 							System.out.println("update brand");
-							
 							String aux=wcs_update.get(j).getBrand();
-							System.out.println(aux);
 							wcs_update.get(j).setBrand(aux+","+brand);
-							System.out.println(aux+","+brand);
 							WebContent wcs_updated = wcs.updateWebContent(wcs_update.get(j));
-							System.out.println(wcs_updated.getBrand());
-							System.out.println(wcs_updated.getWebContentId());
+					
 						 }
 					}
 				}
@@ -1271,6 +1265,7 @@ public class RatesService {
 			}
 	
 	public void getWC(){
+		System.out.println("_________Ejecutando Obtener web content __________");
 		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
 		if(wcs.getWebContents()!=null){
 		for (int i = 0; i < wcs.getWebContents().size(); i++) {
@@ -1290,6 +1285,7 @@ public class RatesService {
 	 * @param password
 	 */
 	public String getAuth(String username, String password) {
+		System.out.println("_________Ejecutando getAuth __________");
 		return _commons.basicAuth(username, password);
 	}
 	
@@ -1298,11 +1294,12 @@ public class RatesService {
 	 * @param groupId
 	 */
 	public long searchCategory(String item, long groupId) {
+		System.out.println("_________Ejecutando searchCategory __________");
 		return _liferayServices.searchCategoryId(item, groupId);
 	}
 	
 	public JournalFolder createFolder(ThemeDisplay themeDisplay) throws PortalException{
-
+		System.out.println("_________Ejecutando createFolder __________");
 		JournalFolder actualFolder = null;
 		List<JournalFolder> folders = JournalFolderLocalServiceUtil.getFolders(themeDisplay.getScopeGroupId(),0);
 		for(JournalFolder folder : folders){
@@ -1327,7 +1324,7 @@ public class RatesService {
 		}
 return hotelFolder;
 }
-	
+	/*
 	// XML de marca
 	public static String getXmlBrand(Contents contents_es, Contents contents_en, String theBrand){
 		
@@ -1501,7 +1498,7 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 		//descriptionMap.put(Locale.US, title);
 		
 		try {
-			JournalArticleLocalServiceUtil.deleteArticle(groupId, title, serviceContext);
+			//JournalArticleLocalServiceUtil.deleteArticle(groupId, title, serviceContext);
 		} catch (Exception ex) {
 			// TODO: handle exception
 			System.out.println("Ignoring "+ ex.getMessage());
@@ -1512,17 +1509,18 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 		//Creación de estructura
 		DDMStructure ddmStructure;
 		
-		ddmStructure = DDMStructureLocalServiceUtil.getDDMStructure(33571);
+		ddmStructure = DDMStructureLocalServiceUtil.getDDMStructure(34987);
 		
-		DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.getDDMTemplate(33604);
-		
+		DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.getDDMTemplate(35020);
+		System.out.println("TitleMap: "+ title);
 		JournalArticle article = JournalArticleLocalServiceUtil.addArticle(
 				userId, groupId, 0, titleMap, null, xmlContent, ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), serviceContext);
+				System.out.println("Done");
 				return article;
-	}
+	}*/
 
 	public void readServiceRates(ResourceRequest resourceRequest) throws PortalException{
-		System.out.println("Antes del bucle");
+		System.out.println("_________Ejecutando readServiceRates Asignando categorias __________");
 		// Accediendo al servicio
 		WebContentLocalService service = WebContentLocalServiceUtil.getService();
 		// Lista de contenidos
@@ -1557,22 +1555,15 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 	}
 	
 	private void updateJornal(long[] categories, JournalArticle article, ThemeDisplay themeDisplay) throws PortalException {
-		
-		for (int i = 0; i < categories.length; i++) {
-			System.out.println(categories[i]);
-		}
-		
-		
-		
-		System.out.println("___________________");
-
-		System.out.println(article.getContent());
+	    System.out.println("_________Ejecutando update de web content__________");
+		//System.out.println(article.getContent());
 		JournalArticleLocalServiceUtil.updateAsset(themeDisplay.getScopeGroupId(), article, categories, null, null, 0.0);
 		
 	}
 
 
 	public String[] convertBrandToArray(String brand){
+		System.out.println("_________Ejecutando convertBrandToArray__________");
 		brand = brand.replace(" ", "");
 		String s[] = null;
 		if(!brand.split(",").toString().equals(" ")){

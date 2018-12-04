@@ -36,13 +36,19 @@ public class RatesPortletViewController {
 		
 		@RenderMapping
 		public String view(RenderRequest request, RenderResponse response, Model model, Map<String, Object> map) throws HttpException, PortalException, IOException {
-			map.put("marcas", marcas);
 			return "view";
 		}
 		
 		@org.springframework.web.portlet.bind.annotation.ResourceMapping(value="execute")
 		public void getCategories(ResourceRequest resourceRequest,ResourceResponse resourceResponse,Model model) throws Exception{
 			_rates.insertWC(resourceRequest);
+		 }
+		
+		
+		
+		@org.springframework.web.portlet.bind.annotation.ResourceMapping(value="delete")
+		public void delete(ResourceRequest resourceRequest,ResourceResponse resourceResponse,Model model) throws Exception{
+			_rates.delete();
 		 }
 		
 		@ActionMapping(value="misMarcas")

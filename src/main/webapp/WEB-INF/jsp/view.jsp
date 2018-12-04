@@ -20,6 +20,7 @@
 <liferay-theme:defineObjects />
 
 <portlet:resourceURL id="execute" var="execute" ></portlet:resourceURL>
+<portlet:resourceURL id="delete" var="delete" ></portlet:resourceURL>
 
 <p>
 	<b><liferay-ui:message key="com.consistent.migration.rates.caption"/></b>
@@ -27,7 +28,7 @@
 <section>
 	<article>
 	<portlet:defineObjects />
-	<portlet:actionURL var="submitFormURL" name="handleCustomer"/>
+	<portlet:actionURL var="submitFormURL" name="misMarcas"/>
 	<form:form name="marcas" method="post" modelAttribute="marcas" action="${ submitFormURL.toString() }">
     <label class="checkbox-inline">
       <input type="checkbox" name="marca" value="AQUA">AQUA
@@ -43,6 +44,7 @@
 </section>
 <aside>
 	<button id="idAppAlfrescoButtonGetInfo">Import Content</button>
+	<button id="del">Import Content</button>
 
 </aside>
 	
@@ -53,6 +55,22 @@ $("#idAppAlfrescoButtonGetInfo").click(function(){
 
 	 $.ajax({
 		 url: "${execute}" ,
+		 type: 'GET',
+		 datatype:'json',
+		 success: function(data){
+		var obj = JSON.parse(data);
+		console.log(obj);
+		}
+		});
+	});
+	
+	
+	
+	
+$("#del").click(function(){
+
+	 $.ajax({
+		 url: "${delete}" ,
 		 type: 'GET',
 		 datatype:'json',
 		 success: function(data){

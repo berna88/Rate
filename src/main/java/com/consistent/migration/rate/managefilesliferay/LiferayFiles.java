@@ -98,7 +98,7 @@ public class LiferayFiles {
 				return getPath(file_life.getFileEntryId(), themeDisplay);
 				
 			} catch (PortalException e1) {
-				File file = saveImage(path_server_file);
+				/*File file = saveImage(path_server_file);
 			 	String mimeType = MimeTypesUtil.getContentType(file);
 				String title = file.getName();
 				try
@@ -114,7 +114,7 @@ public class LiferayFiles {
 			     } catch (Exception e)
 			    {
 			    	e.printStackTrace();
-			    }
+			    }*/
 			}
 			return null;
 

@@ -23,7 +23,7 @@ public class Rate {
 	String end;
 	List<Medialinks> medialinks;
 	
-	@XmlElement(name="end")
+	@XmlElement(name="enddate")
 	public String getEnd() {
 		return end;
 	}

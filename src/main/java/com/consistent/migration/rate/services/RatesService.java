@@ -86,12 +86,12 @@ public class RatesService {
 	public void insertWC(ResourceRequest resourceRequest) throws Exception{
 		Map<String, String> m = new HashMap<>();
 		m.put("AQB","AQUA");
-		m.put("FVZ", "FA");
-		m.put("SLP", "FI");
-		m.put("FBC", "FAG");
-		m.put("EXN", "EX");
-		m.put("OAC", "ONE");
-		m.put("GCA", "GAMMA");
+		//m.put("FVZ", "FA");
+		//m.put("SLP", "FI");
+		//m.put("FBC", "FAG");
+		//m.put("EXN", "EX");
+		//m.put("OAC", "ONE");
+		//m.put("GCA", "GAMMA");
 		//m.put("RLC", "LARC");
 
 		for(Map.Entry<String, String> entry :m.entrySet()){
@@ -114,7 +114,7 @@ public class RatesService {
 	public Contents getMappingSpanish(String code,String brand)
 			throws HttpException, IOException, JAXBException, PortalException {
 		String token = this.getAuth("user1", "user1");
-		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=spanish&channel=www&bookingdate=2016-04-29";
+		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=spanish&channel=www&bookingdate=2010-01-01";
 		GetMethod method_en = _commons.GetWebScript(path_en, token);
 		HttpClient client_en = new HttpClient();
 		int statusCode_en = client_en.executeMethod(method_en);
@@ -137,7 +137,7 @@ public class RatesService {
 			throws HttpException, IOException, JAXBException, PortalException {
 		String token = this.getAuth("user1", "user1");
 		System.out.println("peticion");
-		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=english&channel=www&bookingdate=2016-04-29";
+		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=english&channel=www&bookingdate=22010-01-01";
 		GetMethod method_en = _commons.GetWebScript(path_en, token);
 		HttpClient client_en = new HttpClient();
 		int statusCode_en = client_en.executeMethod(method_en);
@@ -150,24 +150,6 @@ public class RatesService {
 		
 	}
 	
-	public Contents getRate(String code)
-			throws HttpException, IOException, JAXBException, PortalException {
-		String token = this.getAuth("user1", "user1");
-		System.out.println("peticion");
-		String path = "http://10.87.181.211/alfresco/service/psd/ecm/getPromotionOffers?language=ENGLISH&channel=www&code=".concat(code);
-		final String path_en =  path;
-		GetMethod method_en = _commons.GetWebScript(path_en, token);
-		HttpClient client_en = new HttpClient();
-		int statusCode_en = client_en.executeMethod(method_en);
-		if (statusCode_en != HttpStatus.SC_OK) {
-			System.err.println("Method failed: " +method_en.getStatusLine());
-		}
-		InputStream is_en = method_en.getResponseBodyAsStream();
-		Contents rates_en = (Contents) _commons.getTypeInstanceRate().createUnmarshaller().unmarshal(is_en);
-	    return rates_en;
-		
-	}
-
 	
 	
 	public List<WebContent> validateWcByCode(String code){
@@ -521,6 +503,59 @@ public class RatesService {
 			}
 		}
 		}
+		
+		String enddates="";
+		
+		if((rate_es.getEnd()!=null || !rate_es.getEnd().equals("")) && (rate_en.getEnd()==null || rate_en.getEnd().equals(""))){
+			enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
+
+									_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
+
+											_dynamics.getDynamicContent("", "")
+
+											)+
+		 			                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
+
+											_dynamics.getDynamicContent(rate_es.getEnd(), rate_en.getEnd())
+
+											)
+
+									);
+		}
+		else if((rate_en.getEnd()!=null || !rate_en.getEnd().equals("")) && (rate_es.getEnd()==null || rate_es.getEnd().equals(""))){
+			enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
+
+									_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
+
+											_dynamics.getDynamicContent("", "")
+
+											)+
+		 			                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
+
+											_dynamics.getDynamicContent(rate_en.getEnd(), rate_en.getEnd())
+
+											)
+
+									);
+		}
+		else{
+		enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
+
+				_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
+
+						_dynamics.getDynamicContent("", "")
+
+						)+
+	                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
+
+						_dynamics.getDynamicContent("","")
+
+						)
+
+				);
+		}
+		
+		
 		System.out.println("_________Importando marca __________");
 		System.out.println(brand);		
 		System.out.println("mapenado rates");
@@ -1176,22 +1211,21 @@ public class RatesService {
 							_dynamics.DynamicElement("mountRate2", "text", "keyword", 
 									_dynamics.getDynamicContent("", ""))
 							+
-
-							_dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
+						_dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
 
 									_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
 
 											_dynamics.getDynamicContent("", "")
 
 											)+
-
-									_dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
+		 			                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
 
 											_dynamics.getDynamicContent(rate_es.getEnd(), rate_en.getEnd())
 
 											)
 
-									)+
+									)
+						+
 
 							_dynamics.DynamicElement("travelDateRate", "selection_break", "keyword", 
 

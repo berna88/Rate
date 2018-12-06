@@ -85,14 +85,14 @@ public class RatesService {
 	
 	public void insertWC(ResourceRequest resourceRequest) throws Exception{
 		Map<String, String> m = new HashMap<>();
-		//m.put("AQB","AQUA");
-		//m.put("FVZ", "FA");
-		//m.put("SLP", "FI");
-		//m.put("FBC", "FAG");
-		//m.put("EXN", "EX");
+		m.put("AQB","AQUA");
+		m.put("FVZ", "FA");
+		m.put("SLP", "FI");
+		m.put("FBC", "FAG");
+		m.put("EXN", "EX");
 		m.put("OAC", "ONE");
 		m.put("GCA", "GAMMA");
-		m.put("RLC", "LARC");
+		//m.put("RLC", "LARC");
 
 		for(Map.Entry<String, String> entry :m.entrySet()){
 			System.out.println("<------- Marca :"+ entry.getValue()+" ---------->");
@@ -149,6 +149,24 @@ public class RatesService {
 	    return rates_en;
 		
 	}
+	
+	public Contents getRate(String code)
+			throws HttpException, IOException, JAXBException, PortalException {
+		String token = this.getAuth("user1", "user1");
+		System.out.println("peticion");
+		String path = "http://10.87.181.211/alfresco/service/psd/ecm/getPromotionOffers?language=ENGLISH&channel=www&code=".concat(code);
+		final String path_en =  path;
+		GetMethod method_en = _commons.GetWebScript(path_en, token);
+		HttpClient client_en = new HttpClient();
+		int statusCode_en = client_en.executeMethod(method_en);
+		if (statusCode_en != HttpStatus.SC_OK) {
+			System.err.println("Method failed: " +method_en.getStatusLine());
+		}
+		InputStream is_en = method_en.getResponseBodyAsStream();
+		Contents rates_en = (Contents) _commons.getTypeInstanceRate().createUnmarshaller().unmarshal(is_en);
+	    return rates_en;
+		
+	}
 
 	
 	
@@ -166,9 +184,11 @@ public class RatesService {
 	}
 	
 	public void delete() throws NoSuchWebContentException, PortalException{
+		System.out.println("Entrando a metodo de borrado de tabla");
 		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
 		for(WebContent content : wcs.getWebContents()){
-			wcs.deleteWebContent(content.getPrimaryKey());		
+			wcs.deleteWebContent(content.getPrimaryKey());
+			System.out.println("borrando tabla");
 			}
 		
 	}
@@ -281,19 +301,21 @@ public class RatesService {
 				// Lista que solo tiene un idioma
 				// Solo obtiene los campos vacios
 				if(rate12.getValue().getCode().equals("") && !rate12.getKey().getCode().equals("")){
-					count2++;
+					
 					for(int i=0; i < mapper.size(); i++){
 						if(rate12.getKey().getCode().equals(maxList.get(i).getCode())){
 							rateOnlyLanguage.add(maxList.get(i));
+							count2++;
 							break;
 						}
 					}
 				}else {
 					if(rate12.getKey().getCode().equals("") && !rate12.getValue().getCode().equals("")){
-						count2++;
+						
 						for(int i=0; i < mapper.size(); i++){
 							if(rate12.getValue().getCode().equals(maxList.get(i).getCode())){
 								rateOnlyLanguage.add(maxList.get(i));
+								count2++;
 								break;
 							}
 						}
@@ -302,8 +324,6 @@ public class RatesService {
 				//mappingRate(resourceRequest, rate12.getKey(), rate12.getValue());
 				//getRate(rate12.getKey(), rate12.getValue());
 				
-				if(count == 1)
-					break;
 			}
 			System.out.println("total: "+count2);
 			

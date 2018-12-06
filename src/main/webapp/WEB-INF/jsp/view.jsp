@@ -44,7 +44,7 @@
 </section>
 <aside>
 	<button id="idAppAlfrescoButtonGetInfo">Import Content</button>
-	<button id="del">Import Content</button>
+	<button id="del">delete</button>
 
 </aside>
 	

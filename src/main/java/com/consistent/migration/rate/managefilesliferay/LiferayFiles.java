@@ -13,10 +13,13 @@ import javax.portlet.ResourceRequest;
 
 import org.apache.commons.io.FilenameUtils;
 
+import com.consistent.migration.rate.services.RatesService;
 import com.liferay.document.library.kernel.model.DLFileEntry;
 import com.liferay.document.library.kernel.model.DLFolderConstants;
 import com.liferay.document.library.kernel.service.DLAppServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.repository.model.FileEntry;
 import com.liferay.portal.kernel.repository.model.Folder;
 import com.liferay.portal.kernel.service.ServiceContext;
@@ -27,23 +30,27 @@ import com.liferay.portal.kernel.util.MimeTypesUtil;
 
 @org.springframework.stereotype.Component
 public class LiferayFiles {
+	private static final Log log = LogFactoryUtil.getLog(LiferayFiles.class);
+	
 
 	public long getRateFolder(ResourceRequest resourceRequest,ThemeDisplay themeDisplay){
+		log.info("<----------- Obteniendo folder de Rate --------------->");
 		long repositoryId = themeDisplay.getScopeGroupId();//repository id is same as groupId
 		long parentFolderId = DLFolderConstants.DEFAULT_PARENT_FOLDER_ID;
 		try {
 			 List<Folder> folders = getFolder(parentFolderId,repositoryId);
 			 for (Folder folder : folders) {
-			     System.out.println("Folder padre Id >> "+folder.getFolderId());
-			     System.out.println("Folder padre Name >>"+folder.getName());
+				 
+			     //System.out.println("Folder padre Id >> "+folder.getFolderId());
+			     //System.out.println("Folder padre Name >>"+folder.getName());
 			     if(folder.getName().toLowerCase().equals("Marcas".toLowerCase())){
 			    	 List<Folder> folders_posadas = getFolder(folder.getFolderId(),repositoryId);
 			    	 for (Folder folder_posadas : folders_posadas) {
-			    		 System.out.println("Folder marcas Id >> "+folder_posadas.getFolderId());
-					     System.out.println("Folder marcas Name >>"+folder_posadas.getName());
+			    		 //System.out.println("Folder marcas Id >> "+folder_posadas.getFolderId());
+					     //System.out.println("Folder marcas Name >>"+folder_posadas.getName());
 					     if(folder_posadas.getName().toLowerCase().equals("Rates".toLowerCase())){
-					    	 System.out.println("Folder rates Id >> "+folder_posadas.getFolderId());
-						     System.out.println("Folder rates Name >>"+folder_posadas.getName());
+					    	 //System.out.println("Folder rates Id >> "+folder_posadas.getFolderId());
+						     //System.out.println("Folder rates Name >>"+folder_posadas.getName());
 						 return  folder_posadas.getFolderId();
 					     }
 			    	 }

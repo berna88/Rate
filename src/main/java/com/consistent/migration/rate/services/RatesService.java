@@ -28,6 +28,8 @@ import com.liferay.journal.model.JournalFolder;
 import com.liferay.journal.service.JournalArticleLocalServiceUtil;
 import com.liferay.journal.service.JournalFolderLocalServiceUtil;
 import com.liferay.portal.kernel.exception.PortalException;
+import com.liferay.portal.kernel.log.Log;
+import com.liferay.portal.kernel.log.LogFactoryUtil;
 import com.liferay.portal.kernel.service.ServiceContext;
 import com.liferay.portal.kernel.theme.ThemeDisplay;
 import com.liferay.portal.kernel.util.WebKeys;
@@ -44,6 +46,8 @@ import posadas_wc_sb.service.WebContentLocalServiceUtil;
 @org.springframework.context.annotation.Scope("singleton")
 @Qualifier("Rates")
 public class RatesService {
+	
+	WebContentLocalService service;
 
 	@org.springframework.beans.factory.annotation.Autowired(required=true)
 	com.consistent.migration.rate.commons.Codes _codes;
@@ -63,44 +67,30 @@ public class RatesService {
 	@org.springframework.beans.factory.annotation.Autowired(required=true)
 	com.consistent.migration.rate.commons.Codes _Codes;
 	
+	private static final Log log = LogFactoryUtil.getLog(RatesService.class);
 	
-	
-	static Map<String, String> getDataRate = new HashMap<>();
-
-	static Map<String, List<String>> getDataRateList = new HashMap<>();
-
-	static List<String> listType = new ArrayList<>();
-
-	static List<String> listKeyword = new ArrayList<>();
-
-	static List<String> listUrl = new ArrayList<>();
-
-	static List<String> listType_en = new ArrayList<>();
-
-	static List<String> listKeyword_en = new ArrayList<>();
-
-	static List<String> listUrl_en = new ArrayList<>();
-	
-	
+	public RatesService(){
+		this.service = WebContentLocalServiceUtil.getService();
+	}
 	
 	public void insertWC(ResourceRequest resourceRequest) throws Exception{
 		Map<String, String> m = new HashMap<>();
-		m.put("AQB","AQUA");
+		//m.put("AQB","AQUA");
 		//m.put("FVZ", "FA");
 		//m.put("SLP", "FI");
 		//m.put("FBC", "FAG");
-		//m.put("EXN", "EX");
+		m.put("EXN", "EX");
 		//m.put("OAC", "ONE");
 		//m.put("GCA", "GAMMA");
 		//m.put("RLC", "LARC");
 
 		for(Map.Entry<String, String> entry :m.entrySet()){
-			System.out.println("<------- Marca :"+ entry.getValue()+" ---------->");
+			log.info("<------- Marca :"+ entry.getValue()+" ---------->");
 			Contents contentsEng=getMappingEnglish(entry.getKey(),entry.getValue());
 			Contents contentsSpa=getMappingSpanish(entry.getKey(),entry.getValue());
 			GeneratetWebContent(resourceRequest,contentsEng, contentsSpa,entry.getValue());
 		}
-		System.out.println("Proceso finalizado");
+		log.info("Proceso finalizado");
 			
 	}
 	
@@ -136,8 +126,8 @@ public class RatesService {
 	public Contents getMappingEnglish(String code,String brand)
 			throws HttpException, IOException, JAXBException, PortalException {
 		String token = this.getAuth("user1", "user1");
-		System.out.println("peticion");
-		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=english&channel=www&bookingdate=22010-01-01";
+		log.info("peticion");
+		final String path_en =  "http://10.43.161.199:8080/alfresco/service/psd/ecm/getHotelRoomRates?brandcode="+brand+"&hotelcode="+code+"&language=english&channel=www&bookingdate=2019-01-01";
 		GetMethod method_en = _commons.GetWebScript(path_en, token);
 		HttpClient client_en = new HttpClient();
 		int statusCode_en = client_en.executeMethod(method_en);
@@ -159,18 +149,18 @@ public class RatesService {
 	}
 	
 	public List<posadas_wc_sb.model.WebContent> validateWcByName(String name,String code){
-		System.out.println("search by:"+name);
+		log.info("search by:"+name);
 		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
 		
 		return wcs.getWebContentByNameByCode(name, code);
 	}
 	
 	public void delete() throws NoSuchWebContentException, PortalException{
-		System.out.println("Entrando a metodo de borrado de tabla");
+		log.info("Entrando a metodo de borrado de tabla");
 		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
 		for(WebContent content : wcs.getWebContents()){
 			wcs.deleteWebContent(content.getPrimaryKey());
-			System.out.println("borrando tabla");
+			log.info("borrando tabla");
 			}
 		
 	}
@@ -196,7 +186,7 @@ public class RatesService {
 	
 	public void GeneratetWebContent(ResourceRequest resourceRequest,Contents contentsEng,Contents  contentsSpa,String brand) throws Exception{
 		// TODO Auto-generated method stub
-		System.out.println("---------Entrando a Generar el webcontent--------------");
+		log.info("---------Entrando a Generar el webcontent--------------");
 		List<Rate> rateEngList = new ArrayList<>();
 		List<Rate> rateSpaList = new ArrayList<>();
 			if(contentsEng.getContents().get(0).getBrands().get(0).getRates().get(0).getRate()!=null){
@@ -213,75 +203,63 @@ public class RatesService {
 						rateSpaList.add(rate);
 				}
 			}
-			
-			//System.out.println("English: " + rateEngList.size());
-			//System.out.println("Spanish : " + rateSpaList.size());
 			Map<Rate,Rate> mapper = new HashMap<>();
 			
 			List<Rate> maxList = null;
 			List<Rate> minList = null;
-				int language = 0;
+				
 			if(rateEngList.size() > rateSpaList.size())
 				
 			{
-			System.out.println("ENG > ESP");
+			log.info("ENG > ESP");
 			maxList=rateEngList;
 			minList=rateSpaList;
 			
 			}
 			else if(rateSpaList.size() > rateEngList.size())
 		{
-				System.out.println("ESP > ENG");
+				log.info("ESP > ENG");
 		maxList=rateSpaList;
 		minList=rateEngList;
-		language = 1;
+		
 		}
 		else
 		{
-			System.out.println("DEFAULT");
+			log.info("DEFAULT");
 		maxList = rateEngList;
 		minList=rateSpaList;
 		}
 			
-			
 			for(Rate rMax: maxList){
 				boolean flag = false;	
 				for(Rate rMin: minList){
-					
 					if(rMax.getCode().equals(rMin.getCode()))
 					{
-						
 						flag = true;
 						mapper.put(rMax, rMin);
 						minList.remove(rMin);
 						max++;
 						break;
 					}
-						
 					if(flag==false){
 						mapper.put(rMax, new Rate());
 					}
 				}
 			}
 			int count = 0;
-			System.out.println("TamaÃ±o: "+mapper.size() + " Valores iguales: " + max);
-			// Lista donde se agregaran los rates restantes
+		
+			log.info("TamaÃ±o: "+mapper.size() + " Valores iguales: " + max);
 			int count2 = 0;
 			List<Rate> rateOnlyLanguage = new ArrayList<>();
 			for(Map.Entry<Rate, Rate> rate12: mapper.entrySet()){
-				
 				if(!rate12.getValue().getCode().isEmpty() && !rate12.getKey().getCode().isEmpty()){
-					//mappingRate(resourceRequest, rate_es, rate_en, brand);
 					if(rate12.getKey().getLanguage().toLowerCase().equals("english"))
 					mappingRate(resourceRequest, rate12.getValue() , rate12.getKey() , brand);
 					else
 					mappingRate(resourceRequest, rate12.getKey(), rate12.getValue(), brand);
-					System.out.println("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
-					
+					log.info("key: "+rate12.getKey().getCode()+" value: "+rate12.getValue().getCode());
 					count++;
 				}
-				// Lista que solo tiene un idioma
-				// Solo obtiene los campos vacios
 				if(rate12.getValue().getCode().equals("") && !rate12.getKey().getCode().equals("")){
 					
 					for(int i=0; i < mapper.size(); i++){
@@ -303,30 +281,13 @@ public class RatesService {
 						}
 					}
 				}
-				//mappingRate(resourceRequest, rate12.getKey(), rate12.getValue());
-				//getRate(rate12.getKey(), rate12.getValue());
-				
 			}
-			System.out.println("total: "+count2);
-			
-			// Recorrido de los web content con un solo idioma
 			for(Rate rateOnly: rateOnlyLanguage){
-				
-				System.out.println("Creando rate un solo idioma: "+ rateOnly.getLanguage());
+				log.info("<--------- Creando rate un solo idioma:"+ rateOnly.getLanguage() +" ------------> " );
 				mappingRate(resourceRequest, rateOnly, rateOnly, brand);
-		
-						}
-			// obtencion de xml de marca
-			//String xmlBrand = getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode());
-			//System.out.println("Xml de brand "+ xmlBrand);
-			ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
-			long userId = themeDisplay.getUserId();
-			long groupId = themeDisplay.getScopeGroupId();
-			//Agregando Web content de rate
-		//	addJournalArticle(userId, groupId, contentsEng.getContents().get(0).getBrands().get(0).getCode(), getXmlBrand(contentsSpa, contentsEng, contentsEng.getContents().get(0).getBrands().get(0).getCode()), themeDisplay);
-			System.out.println(count);
+				}
+			log.info("Rates que tienen un solo idioma: "+count2+"Rates que son iguales: "+ count + "Tamaño total: "+ mapper.size() );
 			readServiceRates(resourceRequest);
-			
 }
 	
 	
@@ -374,7 +335,7 @@ public class RatesService {
 							   String keyword,
 							   String description,
 							   String brand) throws PortalException{
-		System.out.println("final save content");
+		log.info("<------ Guardando web content -------->");
 		ServiceContext serviceContext = new ServiceContext();
 		DDMStructure ddmStructure1 = getStruct(resourceRequest, "Promociones");
 		ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
@@ -388,8 +349,9 @@ public class RatesService {
 				}
 			}
 			JournalFolder folder = createFolder(themeDisplay);
+			
 			if (ddmTemplate1 != null && folder!=null && title!=null) {
-				System.out.println("insert web content"+ title);
+				log.info("insert web content"+ title);
 			  JournalArticle ja=  insertWebContent(resourceRequest, 
 			    				 xml,
 			    				 title+"-"+keyword,
@@ -410,7 +372,7 @@ public class RatesService {
 						   ""+themeDisplay.getScopeGroupId(),
 						   serviceContext);
 			  }
-
+			  
 				}
 			
 			
@@ -438,7 +400,7 @@ public class RatesService {
 										    String[] assetTagNames,
 										    JournalArticle article)
 										    throws PortalException {
-		System.out.println("Category web content");
+		log.info("<------- Category web content --------->");
 		ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 		Map<Locale, String> titleMap = new HashMap<Locale, String>();
 		titleMap.put(themeDisplay.getLocale(), title);
@@ -468,7 +430,7 @@ public class RatesService {
 											    DDMStructure ddmStructure1, 
 											    DDMTemplate ddmTemplate1)
 											    throws PortalException {
-			System.out.println("_________Ejecutando insertWebContent __________");
+			log.info("_________Ejecutando insertWebContent __________");
 			ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 			Map<Locale, String> titleMap = new HashMap<Locale, String>();
 			titleMap.put(themeDisplay.getLocale(), title);
@@ -486,7 +448,7 @@ public class RatesService {
 		
 	
 	public String mappingRate(ResourceRequest resourceRequest,Rate rate_es,Rate rate_en, String brand) throws PortalException, IOException{
-		System.out.println("_________Ejecutando mapeo de rates __________");
+		log.info("_________Ejecutando mapeo de rates __________");
 		String url=null;
 		if(rate_en.getMedialinks()!=null){
 		if(rate_en.getMedialinks().size()>0){
@@ -504,61 +466,9 @@ public class RatesService {
 		}
 		}
 		
-		String enddates="";
-		
-		if((rate_es.getEnd()!=null || !rate_es.getEnd().equals("")) && (rate_en.getEnd()==null || rate_en.getEnd().equals(""))){
-			enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
-
-									_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
-
-											_dynamics.getDynamicContent("", "")
-
-											)+
-		 			                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
-
-											_dynamics.getDynamicContent(rate_es.getEnd(), rate_en.getEnd())
-
-											)
-
-									);
-		}
-		else if((rate_en.getEnd()!=null || !rate_en.getEnd().equals("")) && (rate_es.getEnd()==null || rate_es.getEnd().equals(""))){
-			enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
-
-									_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
-
-											_dynamics.getDynamicContent("", "")
-
-											)+
-		 			                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
-
-											_dynamics.getDynamicContent(rate_en.getEnd(), rate_en.getEnd())
-
-											)
-
-									);
-		}
-		else{
-		enddates   =           _dynamics.DynamicElement("bookingDateRate", "selection_break", "keyword", 
-
-				_dynamics.DynamicElement("initialDateBooking", "ddm-date", "keyword", 
-
-						_dynamics.getDynamicContent("", "")
-
-						)+
-	                 _dynamics.DynamicElement("finalDateBooking", "ddm-date", "keyword", 
-
-						_dynamics.getDynamicContent("","")
-
-						)
-
-				);
-		}
-		
-		
-		System.out.println("_________Importando marca __________");
-		System.out.println(brand);		
-		System.out.println("mapenado rates");
+		log.info("_________Importando marca __________");
+		log.info(brand);		
+		log.info("mapenado rates");
 		String media = null;
 		
 		if(url!=null){
@@ -1247,7 +1157,7 @@ public class RatesService {
 
 				);
 
-   System.out.println("final mapenado rates");
+   log.info("finalizando mapeo de rates");
   // String brand =getBrand(contents);
 	ThemeDisplay themeDisplay = (ThemeDisplay) resourceRequest.getAttribute(WebKeys.THEME_DISPLAY);
 
@@ -1264,16 +1174,16 @@ public class RatesService {
    }else if(rate_es.getCode()!=null  && rate_es.getKeyword()!=null){
 	   title=rate_es.getCode()+"-"+rate_es.getKeyword();
 	   code=rate_es.getCode();
-	   key=rate_es.getKeyword();
-	   
-	   
+	   key=rate_es.getKeyword();   
    }
    
    List<posadas_wc_sb.model.WebContent> pass=validateWcByName(title,code);
+   
    if(pass.size() == 0){
 	   saveWebcontent(resourceRequest,rate ,code,key, rate_en.getDescription(),brand);
-	   System.out.println("Guardando ");
+	   log.info("Guardando ");
 	   getWC();
+	   
    }
    else{
 	   
@@ -1292,10 +1202,10 @@ public class RatesService {
 					List<WebContent> wcs_update = wcs.getWebContentByName(title);
 					for (int j = 0; j < wcs_update.size(); j++) {
 						 if(wcs_update.get(j).getBrand().equals(brand)){
-							 System.out.println("update brand with self brand");
+							 log.info("update brand with self brand");
 						 }
 						 else{
-							System.out.println("update brand");
+							log.info("update brand");
 							String aux=wcs_update.get(j).getBrand();
 							wcs_update.get(j).setBrand(aux+","+brand);
 							WebContent wcs_updated = wcs.updateWebContent(wcs_update.get(j));
@@ -1303,27 +1213,29 @@ public class RatesService {
 						 }
 					}
 				}
-				System.out.println("encontrado"+JournalArticleLocalServiceUtil.getArticles().get(i));
+				log.info("encontrado"+JournalArticleLocalServiceUtil.getArticles().get(i));
 				jupdate=JournalArticleLocalServiceUtil.getArticles().get(i);
 				break;
 			}
-		}  
+		}
+		  
 	   }
 }
    
 
-
+  
 	return rate;
 
 
 			}
 	
 	public void getWC(){
-		System.out.println("_________Ejecutando Obtener web content __________");
+		log.info("_________Ejecutando Obtener web content __________");
 		WebContentLocalService wcs= WebContentLocalServiceUtil.getService();
 		if(wcs.getWebContents()!=null){
 		for (int i = 0; i < wcs.getWebContents().size(); i++) {
-			System.out.println("wcs:"+wcs.getWebContents().get(i));
+			wcs.getWebContents().get(i);
+			
 			
 		}
 		}
@@ -1339,7 +1251,7 @@ public class RatesService {
 	 * @param password
 	 */
 	public String getAuth(String username, String password) {
-		System.out.println("_________Ejecutando getAuth __________");
+		log.info("_________Ejecutando getAuth __________");
 		return _commons.basicAuth(username, password);
 	}
 	
@@ -1348,12 +1260,12 @@ public class RatesService {
 	 * @param groupId
 	 */
 	public long searchCategory(String item, long groupId) {
-		System.out.println("_________Ejecutando searchCategory __________");
+		log.info("_________Ejecutando searchCategory __________");
 		return _liferayServices.searchCategoryId(item, groupId);
 	}
 	
 	public JournalFolder createFolder(ThemeDisplay themeDisplay) throws PortalException{
-		System.out.println("_________Ejecutando createFolder __________");
+		log.info("_________Ejecutando createFolder __________");
 		JournalFolder actualFolder = null;
 		List<JournalFolder> folders = JournalFolderLocalServiceUtil.getFolders(themeDisplay.getScopeGroupId(),0);
 		for(JournalFolder folder : folders){
@@ -1378,205 +1290,12 @@ public class RatesService {
 		}
 return hotelFolder;
 }
-	/*
-	// XML de marca
-	public static String getXmlBrand(Contents contents_es, Contents contents_en, String theBrand){
-		
-		System.out.println("<----- Entrando al mapeo de Brand ------>");
-		Map<String, String> mapBrand = new HashMap<>();
-		
-		if(contents_es!=null && !contents_es.equals("")){
-
-			for(Content content : contents_es.getContents()){
-
-				if(content!=null && !content.equals("")){
-
-					for(Brand brand : content.getBrands()){
-
-						mapBrand.put("code_es", brand.getCode());
-
-						mapBrand.put("name_es", brand.getName());
-
-					}
-
-				}
-
-			}
-
-		}
-
-		if(contents_en!=null && !contents_en.equals("")){
-
-			for(Content content : contents_en.getContents()){
-
-				if(content!=null && !content.equals("")){
-
-					for(Brand brand : content.getBrands()){
-
-						mapBrand.put("code_en", brand.getCode());
-
-						mapBrand.put("name_en", brand.getName());
-
-					}
-
-				}
-
-			}
-
-		}
-
-		
-
-		
-
-		
-		System.out.println("<--- Entrando al xml de brand ---> ");
-		
-		MappingString _dynamics = new MappingString();
-		String rateLink = _dynamics.DynamicElementRateLink("ratelinkBrand", "ddm-journal-article", "keyword", "", "", theBrand);
-		String brand = _dynamics.DynamicHeader(
-
-				_dynamics.DynamicElement("brand", "selection_break", "keyword", 
-
-						_dynamics.DynamicElement("codeBrand", "text", "keyword", 
-
-								_dynamics.getDynamicContent(mapBrand.get("code_es"), mapBrand.get("code_en"))
-
-								)+
-
-						_dynamics.DynamicElement("nameBrand", "text", "keyword", 
-
-								_dynamics.getDynamicContent(mapBrand.get("name_es"), mapBrand.get("name_en"))
-
-								)+
-
-						_dynamics.DynamicElement("keywordBrand", "text", "keyword", 
-
-								_dynamics.getDynamicContent("", "")
-
-								)+
-
-						_dynamics.DynamicElement("descriptionsBrand", "selection_break", "keyword", 
-
-								_dynamics.DynamicElement("descriptionBrand", "text_area", "text", 
-
-										_dynamics.getDynamicContent("", "")
-
-										)+
-
-								_dynamics.DynamicElement("shortDescriptionBrand", "text_area", "text", 
-
-										_dynamics.getDynamicContent("", "")
-
-										)
-
-								)+
-
-						_dynamics.DynamicElement("sloganBrand", "text", "keyword", 
-
-								_dynamics.getDynamicContent("", "")
-
-								)+
-
-						_dynamics.DynamicElement("productsBrand", "text_area", "text", 
-
-								_dynamics.getDynamicContent("", "")
-
-								)+
-
-						_dynamics.DynamicElement("servicesBrand", "text_area", "text", 
-
-								_dynamics.getDynamicContent("", "")
-
-								)+
-
-						_dynamics.DynamicElement("featureBrand", "text_area", "text", 
-
-								_dynamics.getDynamicContent("", "")
-
-								)+
-
-						_dynamics.DynamicElement("medialinksBrand", "selection_break", "keyword", 
-
-								_dynamics.DynamicElement("MediaLinkFooterBrand", "document_library", "keyword", 
-
-										_dynamics.DynamicElement("typeBrand", "list", "keyword", 
-
-												_dynamics.getDynamicContent("", "")
-
-												)+
-
-										_dynamics.DynamicElement("Pie", "text", "keyword", 
-
-												_dynamics.getDynamicContent("", "")
-
-												)+
-
-										_dynamics.getDynamicContent("", "")
-
-										)
-								)+
-
-						_dynamics.DynamicElement("ratelinksBrand", "selection_break", "keyword", 
-
-								_dynamics.DynamicElement("ratelinkBrand", "ddm-journal-article", "keyword", 
-
-										_dynamics.getDynamicContent("", "")
-
-										)+
-								rateLink
-
-								)
-
-						)
-
-				);
-
-		System.out.println("Nuevo Marca: "+ brand);
-
-		return brand;
-
-	}
 	
-public static JournalArticle addJournalArticle(long userId, long groupId, String title, String miXml, ThemeDisplay themeDisplay) throws Exception{
-		
-		ServiceContext serviceContext = new ServiceContext();
-		serviceContext.setAddGroupPermissions(true);
-		serviceContext.setAddGuestPermissions(true);
-		serviceContext.setScopeGroupId(groupId);
-		serviceContext.setWorkflowAction(WorkflowConstants.ACTION_PUBLISH);
-		Map<Locale, String> titleMap = new HashMap<Locale, String>();
-		//Map<Locale, String> descriptionMap = new HashMap<Locale,String>();
-		
-		titleMap.put(themeDisplay.getLocale(), title);
-		//descriptionMap.put(Locale.US, title);
-		
-		try {
-			//JournalArticleLocalServiceUtil.deleteArticle(groupId, title, serviceContext);
-		} catch (Exception ex) {
-			// TODO: handle exception
-			System.out.println("Ignoring "+ ex.getMessage());
-		}
-		
-		String xmlContent = miXml;
-		System.out.println("Antes de ingresar al metodo de agregar estructura");
-		//Creación de estructura
-		DDMStructure ddmStructure;
-		
-		ddmStructure = DDMStructureLocalServiceUtil.getDDMStructure(34987);
-		
-		DDMTemplate ddmTemplate = DDMTemplateLocalServiceUtil.getDDMTemplate(35020);
-		System.out.println("TitleMap: "+ title);
-		JournalArticle article = JournalArticleLocalServiceUtil.addArticle(
-				userId, groupId, 0, titleMap, null, xmlContent, ddmStructure.getStructureKey(), ddmTemplate.getTemplateKey(), serviceContext);
-				System.out.println("Done");
-				return article;
-	}*/
 
 	public void readServiceRates(ResourceRequest resourceRequest) throws PortalException{
-		System.out.println("_________Ejecutando readServiceRates Asignando categorias __________");
+		log.info("_________Ejecutando readServiceRates Asignando categorias __________");
 		// Accediendo al servicio
-		WebContentLocalService service = WebContentLocalServiceUtil.getService();
+		//WebContentLocalService service = WebContentLocalServiceUtil.getService();
 		// Lista de contenidos
 		List<WebContent> contents = service.getWebContents();
 		// Lista de articulos
@@ -1591,16 +1310,12 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 					categories= new long[br.length];
 					for (int i = 0; i < br.length; i++) {
 						 categories[i]= searchCategory(br[i],themeDisplay.getScopeGroupId());
-						 
 					}
 					if(categories!=null){
-						System.out.println("update webcontent");
+						log.info("update webcontent");
 						updateJornal(categories,article,themeDisplay);
 					}
-					
-					
-				}
-				
+				}	
 			}
 		
 		}
@@ -1609,15 +1324,15 @@ public static JournalArticle addJournalArticle(long userId, long groupId, String
 	}
 	
 	private void updateJornal(long[] categories, JournalArticle article, ThemeDisplay themeDisplay) throws PortalException {
-	    System.out.println("_________Ejecutando update de web content__________");
-		//System.out.println(article.getContent());
+	    log.info("_________Ejecutando update de web content__________");
+		//log.info(article.getContent());
 		JournalArticleLocalServiceUtil.updateAsset(themeDisplay.getScopeGroupId(), article, categories, null, null, 0.0);
 		
 	}
 
 
 	public String[] convertBrandToArray(String brand){
-		System.out.println("_________Ejecutando convertBrandToArray__________");
+		log.info("_________Ejecutando convertBrandToArray__________");
 		brand = brand.replace(" ", "");
 		String s[] = null;
 		if(!brand.split(",").toString().equals(" ")){
